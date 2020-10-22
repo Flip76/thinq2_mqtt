@@ -77,13 +77,13 @@ print("User #: {}\n".format(thinq.auth.profile.user_no))
 print("Devices:\n")
 
 mqtt_client.connect(mqtt_host,mqtt_port)    
-mqtt_client.publish(mqtt_topic + "/user/" + "user_id",thinq.auth.profile.user_id)
-mqtt_client.publish(mqtt_topic + "/user/" + "user_no",thinq.auth.profile.user_no)
+mqtt_client.publish(mqtt_topic + "/user/" + "user_id",thinq.auth.profile.user_id, 0, True)
+mqtt_client.publish(mqtt_topic + "/user/" + "user_no",thinq.auth.profile.user_no, 0, True)
 
 for device in devices.items:
     print("{}: {} (model {})".format(device.device_id, device.alias, device.model_name))
-    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "alias",device.alias)
-    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "model",device.model_name)
+    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "alias",device.alias, 0, True)
+    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "model",device.model_name, 0, True)
 
 mqtt_client.disconnect()
 
@@ -127,18 +127,31 @@ def on_message(client, userdata, msg):
                 else:
                     try:
                         print("{0} : {1}".format(k, v))
-                        mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/raw_data/" + k,v)
+                        mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/raw_data/" + k,v, 0, True)
 
                         if str(k).lower() == "state":
-                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/state",str(v).lower())
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/state",str(v).lower(), 0, True)
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/state",str(v).lower(), 0, True)
 
                         if str(k).lower() == "error" and str(v).lower() == "error_no":
                             mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/error","none")
 
+                        if "time" in str(k).lower():
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),v, 0, True)
+
+                        if str(k).lower() == "online":
+                                mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),str(v).lower(), 0, True)
+
+                        if str(k).lower() == "type":
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),str(v).lower(), 0, True)
+
+                        if str(k).lower() == "temp":
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),str(v).lower().replace('temp_',''), 0, True)
+
                         if str(v).lower().endswith("_on"):
-                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),"on")
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),"On", 0, True)
                         if str(v).lower().endswith("_off"):
-                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),"off")
+                            mqtt_client.publish(mqtt_topic + "/" + DeviceID + "/data/" + str(k).lower(),"Off", 0, True)
 
                         time.sleep(0.05)
                         #print("{0} : {1}".format(k, v))
@@ -154,8 +167,6 @@ def on_message(client, userdata, msg):
     except Exception as error:
         # Will only catch any other exception
         print("Error: " + error)
-
-
     
 thinq.mqtt.on_message = on_message
 thinq.mqtt.connect()
