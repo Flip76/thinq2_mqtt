@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+#############################################################################
+# Version:      1.1
+# Changes:      2020-10-23  Error handling for mqtt-connect added
+#############################################################################
+
 import os
 import json
 import signal
