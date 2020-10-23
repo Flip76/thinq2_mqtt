@@ -64,6 +64,7 @@ signal.signal(signal.SIGINT, shutdown)
 #############################################################################
 # display some information about the user's account/devices                 #
 #############################################################################
+
 mqtt_client=paho.Client(mqtt_client_name)
 devices = thinq.mqtt.thinq_client.get_devices()
 
@@ -76,14 +77,19 @@ print("UserID: {}".format(thinq.auth.profile.user_id))
 print("User #: {}\n".format(thinq.auth.profile.user_no))
 print("Devices:\n")
 
-mqtt_client.connect(mqtt_host,mqtt_port)    
-mqtt_client.publish(mqtt_topic + "/user/" + "user_id",thinq.auth.profile.user_id, 0, True)
-mqtt_client.publish(mqtt_topic + "/user/" + "user_no",thinq.auth.profile.user_no, 0, True)
+try:
+    mqtt_client.connect(mqtt_host,mqtt_port)    
+    mqtt_client.publish(mqtt_topic + "/user/" + "user_id",thinq.auth.profile.user_id, 0, True)
+    mqtt_client.publish(mqtt_topic + "/user/" + "user_no",thinq.auth.profile.user_no, 0, True)
+except Exception as error:
+    # Will only catch any other exception
+    print("Error: " + str(error))
+    raise
 
 for device in devices.items:
     print("{}: {} (model {})".format(device.device_id, device.alias, device.model_name))
-    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "alias",device.alias, 0, True)
-    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/" + "model",device.model_name, 0, True)
+    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/alias",device.alias, 0, True)
+    mqtt_client.publish(mqtt_topic + "/" + device.device_id + "/device_info/model",device.model_name, 0, True)
 
 mqtt_client.disconnect()
 
@@ -98,6 +104,7 @@ mqtt_client.disconnect()
 #client.subscribe(mqtt_topic) #subscribe
 #print("publishing ")
 #client.publish(mqtt_topic + "/state","initializing_new")#publish
+
 
 print("\nListening for device events. Use Ctrl-C/SIGINT to quit.\n")
 
@@ -158,7 +165,8 @@ def on_message(client, userdata, msg):
 
                     except Exception as error:
                         # Will only catch any other exception
-                        print("Error: " + error)
+                        print("Error: " + str(error))
+                        raise
 
         iterate_json(json_dict)
 
@@ -166,7 +174,8 @@ def on_message(client, userdata, msg):
 
     except Exception as error:
         # Will only catch any other exception
-        print("Error: " + error)
+        print("Error: " + str(error))
+        raise
     
 thinq.mqtt.on_message = on_message
 thinq.mqtt.connect()
