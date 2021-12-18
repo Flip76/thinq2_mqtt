@@ -84,6 +84,7 @@ print("User #: {}\n".format(thinq.auth.profile.user_no))
 print("Devices:\n")
 
 try:
+    mqtt_client.username_pw_set(mqtt_user, mqtt_pass)
     mqtt_client.connect(mqtt_host,mqtt_port)    
     mqtt_client.publish(mqtt_topic + "/user/" + "user_id",thinq.auth.profile.user_id, 0, True)
     mqtt_client.publish(mqtt_topic + "/user/" + "user_no",thinq.auth.profile.user_no, 0, True)
